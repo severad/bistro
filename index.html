@@ -524,47 +524,59 @@
         }
 
         // ============================================================
-        // OPRAVENÁ FUNKCE EXPORTU
-        // Problém: html2canvas zachytí element po CSS scale() transformaci.
-        // Řešení: před exportem dočasně odstraníme transformaci, zachytíme
-        // element v plné velikosti 1080x1350, pak transformaci obnovíme.
+        // EXPORT PŘES KLON
+        // html2canvas počítá pozici elementu od začátku dokumentu.
+        // Když je element zmenšený (scale) a zanořený v scrollovatelném
+        // divu, offset je špatný → header a texty jsou posunuté dolů.
+        //
+        // Řešení: vytvoříme klon v position:fixed přímo na 0,0 mimo
+        // normální flow. html2canvas pak zachytí přesně 1080×1350 px
+        // bez jakéhokoliv offsetu.
         // ============================================================
         async function createExportImage() {
-            const canvasElement = document.getElementById('render-canvas');
-            const wrapper = document.getElementById('canvas-wrapper');
+            const source = document.getElementById('render-canvas');
 
-            // 1. Uložíme aktuální transformaci a výšku wrapperu
-            const originalTransform = canvasElement.style.transform;
-            const originalWrapperHeight = wrapper.style.height;
-            const originalBoxShadow = canvasElement.style.boxShadow;
+            // 1. Klon zdrojového elementu (včetně celého DOM obsahu)
+            const clone = source.cloneNode(true);
 
-            // 2. Odstraníme transformaci — element bude v plné velikosti 1080×1350
-            canvasElement.style.transform = 'none';
-            canvasElement.style.boxShadow = 'none';
-            wrapper.style.height = '1350px';
+            // 2. Umístíme klon přesně na 0,0 mimo flow — žádný scroll, žádný offset
+            Object.assign(clone.style, {
+                position:   'fixed',
+                top:        '0',
+                left:       '0',
+                width:      '1080px',
+                height:     '1350px',
+                transform:  'none',
+                boxShadow:  'none',
+                zIndex:     '-9999',
+                visibility: 'hidden',   // neviditelný, ale renderovaný
+                pointerEvents: 'none',
+            });
 
-            // 3. Počkáme jeden frame aby prohlížeč přerendoval layout
-            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            document.body.appendChild(clone);
+
+            // 3. Počkáme dva framy — prohlížeč musí layout vypočítat
+            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
             try {
-                // 4. Zachytíme element v plné velikosti — žádné scale(), žádné posunutí
-                const canvas = await html2canvas(canvasElement, {
-                    scale: 1,           // 1:1 — zachytíme přesně 1080×1350 px
-                    useCORS: true,
-                    logging: false,
+                const canvas = await html2canvas(clone, {
+                    scale:           1,
+                    useCORS:         true,
+                    logging:         false,
                     backgroundColor: '#e4dfd6',
-                    width: 1080,
-                    height: 1350,
-                    windowWidth: 1080,
-                    scrollX: 0,
-                    scrollY: 0
+                    width:           1080,
+                    height:          1350,
+                    x:               0,
+                    y:               0,
+                    scrollX:         0,
+                    scrollY:         0,
+                    windowWidth:     1080,
+                    windowHeight:    1350,
                 });
                 return canvas;
             } finally {
-                // 5. Vždy obnovíme původní transformaci (i při chybě)
-                canvasElement.style.transform = originalTransform;
-                canvasElement.style.boxShadow = originalBoxShadow;
-                wrapper.style.height = originalWrapperHeight;
+                // 4. Klon vždy odstraníme (i při chybě)
+                document.body.removeChild(clone);
             }
         }
 
