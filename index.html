@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generátor Poledního Menu</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Oswald:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <!-- html2canvas and jsPDF for exports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Fixed Canvas Container representing 1080x1350 (Instagram Portrait 4:5) */
+        #render-canvas {
+            width: 1080px;
+            height: 1350px;
+            background-color: #e4dfd6; /* Light grey/beige texture base */
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            /* Scaling logic will be handled via JS to fit screens */
+            transform-origin: top center;
+        }
+
+        /* Canvas internal styling to match the provided image */
+        .canvas-header-bg {
+            background-color: #d2c1b0;
+            height: 260px;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 80px;
+            box-sizing: border-box;
+        }
+
+        .canvas-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: 140px;
+            color: #1a1a1a;
+            margin-top: 20px;
+        }
+
+        .canvas-logo {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .canvas-body {
+            position: absolute;
+            top: 260px;
+            width: 100%;
+            height: calc(1350px - 260px);
+            padding: 20px 60px;
+            box-sizing: border-box;
+            background: radial-gradient(circle at center, #ece9e2 0%, #ded9ce 100%);
+        }
+
+        .canvas-disclaimer {
+            text-align: center;
+            color: #cc0000;
+            font-size: 24px;
+            font-family: 'Oswald', sans-serif;
+            line-height: 1.2;
+            margin-bottom: 30px;
+        }
+
+        .day-block {
+            margin-bottom: 25px;
+        }
+
+        .day-header {
+            background-color: #d0bcab;
+            display: inline-block;
+            padding: 5px 20px;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 700;
+            font-size: 28px;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            color: #111;
+        }
+
+        .food-item {
+            font-size: 26px;
+            color: #222;
+            line-height: 1.4;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .food-soup {
+            font-size: 26px;
+            color: #222;
+            margin-bottom: 5px;
+            padding-left: 5px;
+        }
+
+        .food-meal {
+            padding-left: 5px;
+            flex: 1;
+        }
+
+        .food-price {
+            font-weight: 500;
+            text-align: right;
+            min-width: 100px;
+        }
+
+        /* App UI Styling */
+        .tab-btn.active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+
+        /* Custom Scrollbar for inputs */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Toast notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 50;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen text-gray-800">
+
+    <!-- Header Navigation -->
+    <header class="bg-white shadow-sm z-10 relative">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="chef-hat" class="text-blue-600"></i>
+                    <h1 class="text-xl font-bold text-gray-900">Bistro Menu</h1>
+                </div>
+                <div class="flex gap-4 h-full">
+                    <button onclick="switchTab('editor')" id="btn-editor" class="tab-btn active px-3 flex items-center gap-2 font-medium text-gray-500 hover:text-gray-700 transition-colors h-full">
+                        <i data-lucide="edit-3" class="w-5 h-5"></i>
+                        <span class="hidden sm:inline">Editor</span>
+                    </button>
+                    <button onclick="switchTab('preview')" id="btn-preview" class="tab-btn px-3 flex items-center gap-2 font-medium text-gray-500 hover:text-gray-700 transition-colors h-full">
+                        <i data-lucide="image" class="w-5 h-5"></i>
+                        <span class="hidden sm:inline">Náhled a Export</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-hidden relative">
+        
+        <!-- EDITOR TAB -->
+        <div id="tab-editor" class="absolute inset-0 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8 transition-opacity duration-300">
+            <div class="max-w-2xl mx-auto space-y-6 pb-20">
+                
+                <!-- General Settings -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-blue-500"></i>
+                        Nastavení týdne
+                    </h2>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Datum pondělí</label>
+                        <input type="date" id="start-date" class="w-full sm:w-1/2 p-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                        <p class="text-xs text-gray-500 mt-2">Data pro úterý až pátek se doplní automaticky.</p>
+                    </div>
+                </div>
+
+                <!-- Days Container (Generated by JS) -->
+                <div id="days-container" class="space-y-4">
+                    <!-- Cards will be injected here -->
+                </div>
+                
+                <!-- Controls -->
+                <div class="flex justify-between items-center pt-4">
+                    <button onclick="clearData()" class="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Vymazat formulář
+                    </button>
+                    <button onclick="manualSave()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Uložit
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- PREVIEW & EXPORT TAB -->
+        <div id="tab-preview" class="absolute inset-0 overflow-y-auto bg-gray-800 p-4 opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col items-center">
+            
+            <!-- Export Toolbar -->
+            <div class="bg-white p-3 rounded-2xl shadow-xl flex flex-wrap justify-center gap-2 sm:gap-4 mb-6 sticky top-0 z-20 w-full max-w-2xl">
+                <button onclick="exportJPG()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white px-4 py-2.5 rounded-xl font-medium shadow-sm transition-all transform active:scale-95">
+                    <i data-lucide="instagram" class="w-5 h-5"></i>
+                    <span>Stáhnout JPG</span>
+                </button>
+                <button onclick="exportPDF()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl font-medium transition-all transform active:scale-95">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                    <span>PDF</span>
+                </button>
+                <button onclick="shareMenu()" id="btn-share" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2.5 rounded-xl font-medium transition-all transform active:scale-95">
+                    <i data-lucide="share-2" class="w-5 h-5"></i>
+                    <span>Sdílet na IG</span>
+                </button>
+            </div>
+
+            <!-- Scaled Wrapper for Canvas -->
+            <div id="canvas-wrapper" class="flex justify-center items-start origin-top pb-20">
+                <!-- ACTUAL CANVAS (1080x1350) -->
+                <div id="render-canvas">
+                    <!-- Header -->
+                    <div class="canvas-header-bg">
+                        <div class="canvas-title">Polední menu</div>
+                        <!-- IMPORTANT: logo.png must be in the same folder as this HTML file -->
+                        <img src="logo.png" alt="Logo" class="canvas-logo" onerror="this.style.display='none'">
+                    </div>
+                    
+                    <!-- Body -->
+                    <div class="canvas-body">
+                        <div class="canvas-disclaimer">
+                            Změna menu vyhrazena.<br>Seznam alergenů k dispozici u obsluhy.
+                        </div>
+                        
+                        <div id="canvas-days-render">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Toast message -->
+    <div id="toast">✅ Uloženo do prohlížeče</div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Constants
+        const DAYS = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek'];
+        const STORAGE_KEY = 'bistro_menu_data';
+
+        // Default App State
+        let appState = {
+            startDate: getNextMonday(),
+            days: Array(5).fill(null).map((_, i) => ({
+                soup: '',
+                meal1: '',
+                price1: '159,-',
+                meal2: '',
+                price2: '159,-'
+            }))
+        };
+
+        // --- Core Logic ---
+
+        function init() {
+            loadFromStorage();
+            renderEditorForms();
+            setupDateListener();
+            updatePreview();
+            handleResize();
+            window.addEventListener('resize', handleResize);
+            
+            // Check native share API support
+            if (!navigator.canShare) {
+                document.getElementById('btn-share').style.display = 'none';
+            }
+        }
+
+        function getNextMonday() {
+            const d = new Date();
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            const monday = new Date(d.setDate(diff));
+            return monday.toISOString().split('T')[0];
+        }
+
+        function calculateDateForDay(startDateStr, dayIndex) {
+            if (!startDateStr) return '';
+            const date = new Date(startDateStr);
+            date.setDate(date.getDate() + dayIndex);
+            return `${date.getDate()}.${date.getMonth() + 1}.`;
+        }
+
+        function setupDateListener() {
+            const dateInput = document.getElementById('start-date');
+            dateInput.value = appState.startDate;
+            dateInput.addEventListener('change', (e) => {
+                appState.startDate = e.target.value;
+                autoSave();
+                updateDayHeaders();
+                updatePreview();
+            });
+        }
+
+        // --- Editor UI Rendering ---
+
+        function renderEditorForms() {
+            const container = document.getElementById('days-container');
+            container.innerHTML = '';
+
+            DAYS.forEach((dayName, index) => {
+                const dayData = appState.days[index];
+                const dateStr = calculateDateForDay(appState.startDate, index);
+
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 transition-all focus-within:ring-2 focus-within:ring-blue-100';
+                card.innerHTML = `
+                    <div class="border-b border-gray-100 pb-3 mb-4 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2">
+                            <span class="w-2 h-6 bg-blue-500 rounded-full inline-block"></span>
+                            ${dayName} <span class="day-date-label text-blue-600 ml-1 font-normal">${dateStr}</span>
+                        </h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <input type="text" placeholder="Polévka (např. Vývar s játrovou rýží)" 
+                                class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-800 transition-all font-medium"
+                                value="${dayData.soup}" oninput="updateState(${index}, 'soup', this.value)">
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" placeholder="1) Název prvního jídla" 
+                                class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
+                                value="${dayData.meal1}" oninput="updateState(${index}, 'meal1', this.value)">
+                            <input type="text" placeholder="Cena" 
+                                class="w-24 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-center focus:ring-2 focus:ring-blue-500 outline-none font-medium"
+                                value="${dayData.price1}" oninput="updateState(${index}, 'price1', this.value)">
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" placeholder="2) Název druhého jídla" 
+                                class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
+                                value="${dayData.meal2}" oninput="updateState(${index}, 'meal2', this.value)">
+                            <input type="text" placeholder="Cena" 
+                                class="w-24 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-center focus:ring-2 focus:ring-blue-500 outline-none font-medium"
+                                value="${dayData.price2}" oninput="updateState(${index}, 'price2', this.value)">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateDayHeaders() {
+            const labels = document.querySelectorAll('.day-date-label');
+            labels.forEach((label, index) => {
+                label.textContent = calculateDateForDay(appState.startDate, index);
+            });
+        }
+
+        function updateState(dayIndex, field, value) {
+            appState.days[dayIndex][field] = value;
+            autoSave();
+            updatePreview();
+        }
+
+        // --- Preview Rendering ---
+
+        function updatePreview() {
+            const container = document.getElementById('canvas-days-render');
+            container.innerHTML = '';
+
+            appState.days.forEach((dayData, index) => {
+                // Skip completely empty days to save space if needed, 
+                // but usually we want to show the structure.
+                if (!dayData.soup && !dayData.meal1 && !dayData.meal2) return;
+
+                const dateStr = calculateDateForDay(appState.startDate, index);
+                const dayName = DAYS[index].toUpperCase();
+
+                const dayBlock = document.createElement('div');
+                dayBlock.className = 'day-block';
+
+                let html = `<div class="day-header">${dayName} ${dateStr}</div>`;
+                
+                if (dayData.soup) {
+                    html += `<div class="food-soup">${dayData.soup}</div>`;
+                }
+                
+                if (dayData.meal1) {
+                    html += `
+                    <div class="food-item">
+                        <div class="food-meal">1) ${dayData.meal1}</div>
+                        <div class="food-price">${dayData.price1}</div>
+                    </div>`;
+                }
+
+                if (dayData.meal2) {
+                    html += `
+                    <div class="food-item">
+                        <div class="food-meal">2) ${dayData.meal2}</div>
+                        <div class="food-price">${dayData.price2}</div>
+                    </div>`;
+                }
+
+                dayBlock.innerHTML = html;
+                container.appendChild(dayBlock);
+            });
+        }
+
+        // --- Local Storage ---
+
+        let saveTimeout;
+        function autoSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            }, 500); // Debounce save
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    appState = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Failed to parse saved data", e);
+                }
+            }
+        }
+
+        function manualSave() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            showToast();
+        }
+
+        function clearData() {
+            appState.days = Array(5).fill(null).map(() => ({
+                soup: '', meal1: '', price1: '159,-', meal2: '', price2: '159,-'
+            }));
+            renderEditorForms();
+            updatePreview();
+            autoSave();
+            showToast("Formulář vymazán");
+        }
+
+        function showToast(msg = "✅ Uloženo do prohlížeče") {
+            const toast = document.getElementById("toast");
+            toast.innerText = msg;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // --- UI Interactions ---
+
+        function switchTab(tabName) {
+            const editorTab = document.getElementById('tab-editor');
+            const previewTab = document.getElementById('tab-preview');
+            const btnEditor = document.getElementById('btn-editor');
+            const btnPreview = document.getElementById('btn-preview');
+
+            if (tabName === 'editor') {
+                editorTab.style.opacity = '1';
+                editorTab.style.pointerEvents = 'auto';
+                previewTab.style.opacity = '0';
+                previewTab.style.pointerEvents = 'none';
+                btnEditor.classList.add('active');
+                btnPreview.classList.remove('active');
+            } else {
+                editorTab.style.opacity = '0';
+                editorTab.style.pointerEvents = 'none';
+                previewTab.style.opacity = '1';
+                previewTab.style.pointerEvents = 'auto';
+                btnEditor.classList.remove('active');
+                btnPreview.classList.add('active');
+                
+                // Ensure fonts are loaded before generating preview layout adjustments
+                document.fonts.ready.then(() => {
+                    handleResize(); 
+                });
+            }
+        }
+
+        function handleResize() {
+            // Scale the 1080x1350 canvas down so it fits the viewport in preview mode
+            const canvas = document.getElementById('render-canvas');
+            const wrapper = document.getElementById('canvas-wrapper');
+            const containerWidth = wrapper.parentElement.clientWidth - 32; // padding
+            
+            // Limit max scale to 1 (don't grow beyond 1080px if on desktop)
+            let scale = containerWidth / 1080;
+            if (scale > 1) scale = 1;
+            if (scale < 0.2) scale = 0.2; // minimum readable
+
+            canvas.style.transform = `scale(${scale})`;
+            wrapper.style.height = `${1350 * scale}px`; // Adjust wrapper height to prevent huge blank space below
+        }
+
+        // --- Export Functions ---
+
+        async function createExportImage() {
+            const canvasElement = document.getElementById('render-canvas');
+            
+            // We need to temporarily remove the CSS scale transform for a high-res capture
+            const originalTransform = canvasElement.style.transform;
+            canvasElement.style.transform = 'scale(1)';
+            
+            // Add a small delay to ensure rendering is complete
+            await new Promise(r => setTimeout(r, 100));
+
+            try {
+                const canvas = await html2canvas(canvasElement, {
+                    scale: 2, // 2x scale for Retina/High-DPI crispness (exports as 2160x2700)
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#e4dfd6'
+                });
+                return canvas;
+            } finally {
+                // Restore scale
+                canvasElement.style.transform = originalTransform;
+            }
+        }
+
+        async function exportJPG() {
+            showToast("⏳ Generuji obrázek...");
+            try {
+                const canvas = await createExportImage();
+                const link = document.createElement('a');
+                link.download = `menu-${appState.startDate}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                link.click();
+            } catch (error) {
+                console.error(error);
+                showToast("❌ Chyba při exportu JPG");
+            }
+        }
+
+        async function exportPDF() {
+            showToast("⏳ Generuji PDF...");
+            try {
+                const canvas = await createExportImage();
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                
+                // Format: portrait, unit: mm, size: A4 (210x297)
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`menu-${appState.startDate}.pdf`);
+            } catch (error) {
+                console.error(error);
+                showToast("❌ Chyba při exportu PDF");
+            }
+        }
+
+        async function shareMenu() {
+            showToast("⏳ Připravuji obrázek pro sdílení...");
+            try {
+                const canvas = await createExportImage();
+                canvas.toBlob(async (blob) => {
+                    if (!blob) {
+                        showToast("❌ Chyba při tvorbě obrázku");
+                        return;
+                    }
+                    
+                    const file = new File([blob], `menu-${appState.startDate}.jpg`, { type: 'image/jpeg' });
+                    
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Polední menu',
+                                text: 'Naše polední menu na tento týden!'
+                            });
+                        } catch (e) {
+                            if (e.name !== 'AbortError') {
+                                console.error('Share error:', e);
+                                showToast("❌ Sdílení se nezdařilo");
+                            }
+                        }
+                    } else {
+                        showToast("❌ Váš prohlížeč nepodporuje přímé sdílení souborů. Stáhněte si JPG.");
+                    }
+                }, 'image/jpeg', 0.9);
+            } catch (error) {
+                console.error(error);
+                showToast("❌ Chyba při sdílení");
+            }
+        }
+
+        // Boot app
+        init();
+
+    </script>
+</body>
+</html>
