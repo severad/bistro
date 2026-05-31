@@ -6,177 +6,51 @@
     <title>Generátor Poledního Menu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Oswald:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        body {
-            background-color: #f3f4f6;
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
+        body { background-color: #f3f4f6; font-family: 'Roboto', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
 
         #render-canvas {
-            width: 1080px;
-            height: 1350px;
+            width: 1080px; height: 1350px;
             background-color: #e4dfd6;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative; overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
             transform-origin: top center;
         }
-
         .canvas-header-bg {
-            background-color: #d2c1b0;
-            height: 220px;
-            width: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 60px;
-            box-sizing: border-box;
+            background-color: #d2c1b0; height: 220px; width: 100%;
+            position: absolute; top: 0; left: 0;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 60px; box-sizing: border-box;
         }
-
-        .canvas-title {
-            font-family: 'Dancing Script', cursive;
-            font-size: 140px;
-            color: #1a1a1a;
-            white-space: nowrap;
-            line-height: 1;
-            padding-bottom: 15px;
-        }
-
-        .canvas-logo {
-            width: 180px;
-            height: 180px;
-            object-fit: contain;
-            border-radius: 50%;
-            z-index: 10;
-        }
-
+        .canvas-title { font-family: 'Dancing Script', cursive; font-size: 140px; color: #1a1a1a; white-space: nowrap; line-height: 1; padding-bottom: 15px; }
+        .canvas-logo { width: 180px; height: 180px; object-fit: contain; border-radius: 50%; z-index: 10; }
         .canvas-body {
-            position: absolute;
-            top: 220px;
-            width: 100%;
-            height: calc(1350px - 220px);
-            padding: 30px 0;
-            box-sizing: border-box;
+            position: absolute; top: 220px; width: 100%; height: calc(1350px - 220px);
+            padding: 30px 0; box-sizing: border-box;
             background: radial-gradient(circle at center, #ece9e2 0%, #ded9ce 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
         }
+        .canvas-disclaimer { text-align: center; color: #cc0000; font-size: 22px; font-family: 'Oswald', sans-serif; line-height: 1.2; margin-bottom: 20px; width: 860px; max-width: 100%; align-self: center; }
+        #canvas-days-render { width: 860px; max-width: 100%; text-align: left; }
+        .day-block { margin-bottom: 15px; width: 100%; }
+        .day-header { background-color: #d0bcab; display: block; width: fit-content; padding: 3px 15px; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: 1px; margin-bottom: 5px; color: #111; }
+        .food-item { font-size: 24px; color: #222; line-height: 1.3; display: flex; justify-content: space-between; }
+        .food-soup { font-size: 24px; color: #222; margin-bottom: 3px; padding-left: 5px; }
+        .food-meal { padding-left: 5px; flex: 1; }
+        .food-price { font-weight: 500; text-align: right; min-width: 100px; }
 
-        .canvas-disclaimer {
-            text-align: center;
-            color: #cc0000;
-            font-size: 22px;
-            font-family: 'Oswald', sans-serif;
-            line-height: 1.2;
-            margin-bottom: 20px;
-            /* FIX: musí mít pevnou šířku a vycentrování pro správné zobrazení */
-            width: 860px;
-            max-width: 100%;
-            align-self: center;
-        }
-
-        #canvas-days-render {
-            width: 860px;
-            max-width: 100%;
-            text-align: left;
-        }
-
-        .day-block {
-            margin-bottom: 15px;
-            width: 100%;
-            text-align: left;
-        }
-
-        .day-header {
-            background-color: #d0bcab;
-            display: block;
-            width: fit-content;
-            padding: 3px 15px;
-            font-family: 'Oswald', sans-serif;
-            font-weight: 700;
-            font-size: 26px;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-            color: #111;
-        }
-
-        .food-item {
-            font-size: 24px;
-            color: #222;
-            line-height: 1.3;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .food-soup {
-            font-size: 24px;
-            color: #222;
-            margin-bottom: 3px;
-            padding-left: 5px;
-        }
-
-        .food-meal {
-            padding-left: 5px;
-            flex: 1;
-        }
-
-        .food-price {
-            font-weight: 500;
-            text-align: right;
-            min-width: 100px;
-        }
-
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
-
-        .tab-btn.active {
-            border-bottom: 2px solid #3b82f6;
-            color: #3b82f6;
-        }
-
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .tab-btn.active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        #toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px;
-            position: fixed;
-            z-index: 50;
-            left: 50%;
-            bottom: 30px;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-        #toast.show {
-            visibility: visible;
-            opacity: 1;
-        }
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 50; left: 50%; bottom: 30px; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s, visibility 0.3s; }
+        #toast.show { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body class="flex flex-col h-screen text-gray-800">
@@ -203,11 +77,8 @@
     </header>
 
     <main class="flex-1 overflow-hidden relative">
-        
-        <!-- EDITOR TAB -->
         <div id="tab-editor" class="absolute inset-0 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8 transition-opacity duration-300">
             <div class="max-w-2xl mx-auto space-y-6 pb-20">
-                
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                     <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                         <i data-lucide="calendar" class="w-5 h-5 text-blue-500"></i>
@@ -218,9 +89,7 @@
                         <input type="date" id="start-date" class="w-full sm:w-1/2 p-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
                     </div>
                 </div>
-
                 <div id="days-container" class="space-y-4"></div>
-                
                 <div class="flex justify-between items-center pt-4">
                     <button onclick="clearData()" class="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
                         <i data-lucide="trash-2" class="w-4 h-4"></i> Vymazat formulář
@@ -229,25 +98,19 @@
                         <i data-lucide="save" class="w-4 h-4"></i> Uložit
                     </button>
                 </div>
-
             </div>
         </div>
 
-        <!-- PREVIEW & EXPORT TAB -->
         <div id="tab-preview" class="absolute inset-0 overflow-y-auto bg-gray-800 p-4 opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col items-center">
-            
             <div class="bg-white p-3 rounded-2xl shadow-xl flex flex-wrap justify-center gap-2 sm:gap-4 mb-6 sticky top-0 z-20 w-full max-w-2xl">
                 <button onclick="exportJPG()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white px-4 py-2.5 rounded-xl font-medium shadow-sm transition-all transform active:scale-95">
-                    <i data-lucide="download" class="w-5 h-5"></i>
-                    <span>Stáhnout JPG</span>
+                    <i data-lucide="download" class="w-5 h-5"></i><span>Stáhnout JPG</span>
                 </button>
                 <button onclick="exportPDF()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl font-medium transition-all transform active:scale-95">
-                    <i data-lucide="file-text" class="w-5 h-5"></i>
-                    <span>PDF</span>
+                    <i data-lucide="file-text" class="w-5 h-5"></i><span>PDF</span>
                 </button>
                 <button onclick="shareMenu()" id="btn-share" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2.5 rounded-xl font-medium transition-all transform active:scale-95">
-                    <i data-lucide="share-2" class="w-5 h-5"></i>
-                    <span>Sdílet na IG</span>
+                    <i data-lucide="share-2" class="w-5 h-5"></i><span>Sdílet na IG</span>
                 </button>
             </div>
 
@@ -255,19 +118,16 @@
                 <div id="render-canvas">
                     <div class="canvas-header-bg">
                         <div class="canvas-title">Polední menu</div>
-                        <img src="logo.png" alt="Logo" class="canvas-logo" onerror="this.style.display='none'">
+                        <img src="logo.png" alt="Logo" class="canvas-logo" onerror="this.style.display='none'" id="logo-img">
                     </div>
-                    
                     <div class="canvas-body">
                         <div class="canvas-disclaimer">
                             Změna menu vyhrazena.<br>Seznam alergenů k dispozici u obsluhy.
                         </div>
-                        
                         <div id="canvas-days-render"></div>
                     </div>
                 </div>
             </div>
-
         </div>
     </main>
 
@@ -281,13 +141,7 @@
 
         let appState = {
             startDate: getNextMonday(),
-            days: Array(5).fill(null).map(() => ({
-                soup: '',
-                meal1: '',
-                price1: '159',
-                meal2: '',
-                price2: '159'
-            }))
+            days: Array(5).fill(null).map(() => ({ soup: '', meal1: '', price1: '159', meal2: '', price2: '159' }))
         };
 
         function init() {
@@ -297,18 +151,14 @@
             updatePreview();
             handleResize();
             window.addEventListener('resize', handleResize);
-            
-            if (!navigator.canShare) {
-                document.getElementById('btn-share').style.display = 'none';
-            }
+            if (!navigator.canShare) document.getElementById('btn-share').style.display = 'none';
         }
 
         function getNextMonday() {
             const d = new Date();
             const day = d.getDay();
             const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            const monday = new Date(d.setDate(diff));
-            return monday.toISOString().split('T')[0];
+            return new Date(d.setDate(diff)).toISOString().split('T')[0];
         }
 
         function calculateDateForDay(startDateStr, dayIndex) {
@@ -323,20 +173,16 @@
             dateInput.value = appState.startDate;
             dateInput.addEventListener('change', (e) => {
                 appState.startDate = e.target.value;
-                autoSave();
-                updateDayHeaders();
-                updatePreview();
+                autoSave(); updateDayHeaders(); updatePreview();
             });
         }
 
         function renderEditorForms() {
             const container = document.getElementById('days-container');
             container.innerHTML = '';
-
             DAYS.forEach((dayName, index) => {
                 const dayData = appState.days[index];
                 const dateStr = calculateDateForDay(appState.startDate, index);
-
                 const card = document.createElement('div');
                 card.className = 'bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 transition-all focus-within:ring-2 focus-within:ring-blue-100';
                 card.innerHTML = `
@@ -347,103 +193,57 @@
                         </h3>
                     </div>
                     <div class="space-y-4">
-                        <div>
-                            <input type="text" placeholder="Polévka" 
-                                class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-800 transition-all font-medium"
-                                value="${dayData.soup}" oninput="updateState(${index}, 'soup', this.value)">
+                        <input type="text" placeholder="Polévka" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800 font-medium" value="${dayData.soup}" oninput="updateState(${index},'soup',this.value)">
+                        <div class="flex gap-2">
+                            <input type="text" placeholder="Jídlo 1" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700" value="${dayData.meal1}" oninput="updateState(${index},'meal1',this.value)">
+                            <input type="number" placeholder="Cena" class="w-28 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-center focus:ring-2 focus:ring-blue-500 outline-none font-medium" value="${dayData.price1}" oninput="updateState(${index},'price1',this.value)">
                         </div>
                         <div class="flex gap-2">
-                            <input type="text" placeholder="Jídlo 1" 
-                                class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
-                                value="${dayData.meal1}" oninput="updateState(${index}, 'meal1', this.value)">
-                            <div class="relative w-28">
-                                <input type="number" placeholder="Cena" 
-                                    class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-center focus:ring-2 focus:ring-blue-500 outline-none font-medium"
-                                    value="${dayData.price1}" oninput="updateState(${index}, 'price1', this.value)">
-                            </div>
+                            <input type="text" placeholder="Jídlo 2" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700" value="${dayData.meal2}" oninput="updateState(${index},'meal2',this.value)">
+                            <input type="number" placeholder="Cena" class="w-28 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-center focus:ring-2 focus:ring-blue-500 outline-none font-medium" value="${dayData.price2}" oninput="updateState(${index},'price2',this.value)">
                         </div>
-                        <div class="flex gap-2">
-                            <input type="text" placeholder="Jídlo 2" 
-                                class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
-                                value="${dayData.meal2}" oninput="updateState(${index}, 'meal2', this.value)">
-                            <div class="relative w-28">
-                                <input type="number" placeholder="Cena" 
-                                    class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-center focus:ring-2 focus:ring-blue-500 outline-none font-medium"
-                                    value="${dayData.price2}" oninput="updateState(${index}, 'price2', this.value)">
-                            </div>
-                        </div>
-                    </div>
-                `;
+                    </div>`;
                 container.appendChild(card);
             });
         }
 
         function updateDayHeaders() {
-            const labels = document.querySelectorAll('.day-date-label');
-            labels.forEach((label, index) => {
-                label.textContent = calculateDateForDay(appState.startDate, index);
+            document.querySelectorAll('.day-date-label').forEach((label, i) => {
+                label.textContent = calculateDateForDay(appState.startDate, i);
             });
         }
 
         function updateState(dayIndex, field, value) {
             appState.days[dayIndex][field] = value;
-            autoSave();
-            updatePreview();
+            autoSave(); updatePreview();
         }
 
-        function formatPrice(priceVal) {
-            if (!priceVal) return '';
-            let cleanVal = String(priceVal).replace(/[,\-\s]/g, '');
-            if (cleanVal) return `${cleanVal},-`;
-            return '';
+        function formatPrice(v) {
+            const clean = String(v || '').replace(/[,\-\s]/g, '');
+            return clean ? `${clean},-` : '';
         }
 
         function updatePreview() {
             const container = document.getElementById('canvas-days-render');
             container.innerHTML = '';
-
-            appState.days.forEach((dayData, index) => {
-                if (!dayData.soup && !dayData.meal1 && !dayData.meal2) return;
-
-                const dateStr = calculateDateForDay(appState.startDate, index);
-                const dayName = DAYS[index].toUpperCase();
-
-                const dayBlock = document.createElement('div');
-                dayBlock.className = 'day-block';
-
-                let html = `<div class="day-header">${dayName} ${dateStr}</div>`;
-                
-                if (dayData.soup) {
-                    html += `<div class="food-soup">${dayData.soup}</div>`;
-                }
-                
-                if (dayData.meal1) {
-                    html += `
-                    <div class="food-item">
-                        <div class="food-meal">1) ${dayData.meal1}</div>
-                        <div class="food-price">${formatPrice(dayData.price1)}</div>
-                    </div>`;
-                }
-
-                if (dayData.meal2) {
-                    html += `
-                    <div class="food-item">
-                        <div class="food-meal">2) ${dayData.meal2}</div>
-                        <div class="food-price">${formatPrice(dayData.price2)}</div>
-                    </div>`;
-                }
-
-                dayBlock.innerHTML = html;
-                container.appendChild(dayBlock);
+            appState.days.forEach((d, i) => {
+                if (!d.soup && !d.meal1 && !d.meal2) return;
+                const dateStr = calculateDateForDay(appState.startDate, i);
+                const block = document.createElement('div');
+                block.className = 'day-block';
+                let html = `<div class="day-header">${DAYS[i].toUpperCase()} ${dateStr}</div>`;
+                if (d.soup) html += `<div class="food-soup">${d.soup}</div>`;
+                if (d.meal1) html += `<div class="food-item"><div class="food-meal">1) ${d.meal1}</div><div class="food-price">${formatPrice(d.price1)}</div></div>`;
+                if (d.meal2) html += `<div class="food-item"><div class="food-meal">2) ${d.meal2}</div><div class="food-price">${formatPrice(d.price2)}</div></div>`;
+                block.innerHTML = html;
+                container.appendChild(block);
             });
         }
 
         let saveTimeout;
         function autoSave() {
             clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-            }, 500);
+            saveTimeout = setTimeout(() => localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)), 500);
         }
 
         function loadFromStorage() {
@@ -455,31 +255,20 @@
                         if (day.price1) day.price1 = String(day.price1).replace(/[,\-\s]/g, '');
                         if (day.price2) day.price2 = String(day.price2).replace(/[,\-\s]/g, '');
                     });
-                } catch (e) {
-                    console.error("Failed to parse saved data", e);
-                }
+                } catch(e) {}
             }
         }
 
-        function manualSave() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-            showToast();
-        }
+        function manualSave() { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); showToast(); }
 
         function clearData() {
-            appState.days = Array(5).fill(null).map(() => ({
-                soup: '', meal1: '', price1: '159', meal2: '', price2: '159'
-            }));
-            renderEditorForms();
-            updatePreview();
-            autoSave();
-            showToast("Formulář vymazán");
+            appState.days = Array(5).fill(null).map(() => ({ soup:'', meal1:'', price1:'159', meal2:'', price2:'159' }));
+            renderEditorForms(); updatePreview(); autoSave(); showToast("Formulář vymazán");
         }
 
         function showToast(msg = "✅ Uloženo do prohlížeče") {
             const toast = document.getElementById("toast");
-            toast.innerText = msg;
-            toast.className = "show";
+            toast.innerText = msg; toast.className = "show";
             setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
         }
 
@@ -488,25 +277,15 @@
             const previewTab = document.getElementById('tab-preview');
             const btnEditor = document.getElementById('btn-editor');
             const btnPreview = document.getElementById('btn-preview');
-
             if (tabName === 'editor') {
-                editorTab.style.opacity = '1';
-                editorTab.style.pointerEvents = 'auto';
-                previewTab.style.opacity = '0';
-                previewTab.style.pointerEvents = 'none';
-                btnEditor.classList.add('active');
-                btnPreview.classList.remove('active');
+                editorTab.style.opacity='1'; editorTab.style.pointerEvents='auto';
+                previewTab.style.opacity='0'; previewTab.style.pointerEvents='none';
+                btnEditor.classList.add('active'); btnPreview.classList.remove('active');
             } else {
-                editorTab.style.opacity = '0';
-                editorTab.style.pointerEvents = 'none';
-                previewTab.style.opacity = '1';
-                previewTab.style.pointerEvents = 'auto';
-                btnEditor.classList.remove('active');
-                btnPreview.classList.add('active');
-                
-                document.fonts.ready.then(() => {
-                    handleResize(); 
-                });
+                editorTab.style.opacity='0'; editorTab.style.pointerEvents='none';
+                previewTab.style.opacity='1'; previewTab.style.pointerEvents='auto';
+                btnEditor.classList.remove('active'); btnPreview.classList.add('active');
+                document.fonts.ready.then(() => handleResize());
             }
         }
 
@@ -514,88 +293,144 @@
             const canvas = document.getElementById('render-canvas');
             const wrapper = document.getElementById('canvas-wrapper');
             const containerWidth = wrapper.parentElement.clientWidth - 32;
-            
-            let scale = containerWidth / 1080;
-            if (scale > 1) scale = 1;
-            if (scale < 0.2) scale = 0.2;
-
+            let scale = Math.min(1, Math.max(0.2, containerWidth / 1080));
             canvas.style.transform = `scale(${scale})`;
             wrapper.style.height = `${1350 * scale}px`;
         }
 
         // ============================================================
-        // EXPORT - zachycení přes off-screen wrapper
-        //
-        // html2canvas ignoruje elementy s visibility:hidden nebo display:none.
-        // Klon musí být viditelný, ale mimo viewport (left: -9999px).
-        // Zachytíme document.body s ořezem na pozici klonu.
+        // EXPORT: čisté kreslení na <canvas> přes Canvas 2D API
+        // Žádné DOM zachytávání — vše nakreslíme přímo kódem.
         // ============================================================
-        async function createExportImage() {
-            const source = document.getElementById('render-canvas');
 
-            // 1. Wrapper mimo obrazovku — position:fixed, left mimo viewport
-            const wrapper = document.createElement('div');
-            Object.assign(wrapper.style, {
-                position:      'fixed',
-                top:           '0',
-                left:          '-1200px',   // mimo viewport, ale viditelné pro renderer
-                width:         '1080px',
-                height:        '1350px',
-                overflow:      'hidden',
-                pointerEvents: 'none',
-                zIndex:        '9999',
-            });
+        async function drawMenuToCanvas() {
+            const W = 1080, H = 1350;
+            const c = document.createElement('canvas');
+            c.width = W; c.height = H;
+            const ctx = c.getContext('2d');
 
-            // 2. Klon zdrojového elementu — bez transformace, plná velikost
-            const clone = source.cloneNode(true);
-            Object.assign(clone.style, {
-                position:  'relative',
-                top:       '0',
-                left:      '0',
-                width:     '1080px',
-                height:    '1350px',
-                transform: 'none',
-                boxShadow: 'none',
-            });
-
-            wrapper.appendChild(clone);
-            document.body.appendChild(wrapper);
-
-            // 3. Počkáme na render — fonty + layout
+            // Počkáme na fonty
             await document.fonts.ready;
-            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-            try {
-                // 4. Zachytíme přímo klon — wrapper zajišťuje že je na fixed pozici
-                //    x/y říká html2canvas kde v rámci elementu začít kreslit
-                const canvas = await html2canvas(clone, {
-                    scale:           1,
-                    useCORS:         true,
-                    logging:         false,
-                    backgroundColor: '#e4dfd6',
-                    width:           1080,
-                    height:          1350,
-                    x:               0,
-                    y:               0,
-                    scrollX:         0,
-                    scrollY:         0,
-                });
-                return canvas;
-            } finally {
-                document.body.removeChild(wrapper);
+            // --- HEADER (béžová plocha) ---
+            ctx.fillStyle = '#d2c1b0';
+            ctx.fillRect(0, 0, W, 220);
+
+            // --- BODY (radial gradient) ---
+            const grad = ctx.createRadialGradient(W/2, 220 + (H-220)/2, 0, W/2, 220 + (H-220)/2, W*0.7);
+            grad.addColorStop(0, '#ece9e2');
+            grad.addColorStop(1, '#ded9ce');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 220, W, H - 220);
+
+            // --- LOGO (pokud existuje) ---
+            const logoImg = document.getElementById('logo-img');
+            if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(W - 60 - 90, 110, 90, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+                ctx.drawImage(logoImg, W - 60 - 180, 20, 180, 180);
+                ctx.restore();
             }
+
+            // --- NADPIS "Polední menu" ---
+            ctx.fillStyle = '#1a1a1a';
+            ctx.font = '700 125px "Dancing Script"';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillText('Polední menu', 60, 185);
+
+            // --- DISCLAIMER (červený text, uprostřed) ---
+            ctx.fillStyle = '#cc0000';
+            ctx.font = '400 22px "Oswald"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('Změna menu vyhrazena.', W/2, 250);
+            ctx.fillText('Seznam alergenů k dispozici u obsluhy.', W/2, 278);
+
+            // --- DNY ---
+            const LEFT = 110;      // levý okraj obsahu (vycentrován: (1080-860)/2)
+            const RIGHT = W - 110; // pravý okraj
+            const CONTENT_W = RIGHT - LEFT;
+
+            let y = 330; // startovní Y po disclaimeru
+
+            const LINE_H = 34;     // výška řádku
+            const BLOCK_GAP = 18;  // mezera mezi dny
+            const HEADER_PAD_V = 6;
+            const HEADER_PAD_H = 15;
+
+            appState.days.forEach((d, i) => {
+                if (!d.soup && !d.meal1 && !d.meal2) return;
+
+                const dateStr = calculateDateForDay(appState.startDate, i);
+                const dayLabel = `${DAYS[i].toUpperCase()} ${dateStr}`;
+
+                // Záhlaví dne — obdélník s textem
+                ctx.font = '700 26px "Oswald"';
+                const headerW = ctx.measureText(dayLabel).width + HEADER_PAD_H * 2;
+                ctx.fillStyle = '#d0bcab';
+                ctx.fillRect(LEFT, y, headerW, LINE_H + HEADER_PAD_V * 2);
+                ctx.fillStyle = '#111111';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(dayLabel, LEFT + HEADER_PAD_H, y + (LINE_H + HEADER_PAD_V * 2) / 2);
+                y += LINE_H + HEADER_PAD_V * 2 + 8;
+
+                // Polévka
+                if (d.soup) {
+                    ctx.font = '400 24px "Roboto"';
+                    ctx.fillStyle = '#222222';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(d.soup, LEFT + 5, y + 17);
+                    y += LINE_H;
+                }
+
+                // Jídlo 1
+                if (d.meal1) {
+                    ctx.font = '400 24px "Roboto"';
+                    ctx.fillStyle = '#222222';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`1) ${d.meal1}`, LEFT + 5, y + 17);
+                    if (d.price1) {
+                        ctx.font = '500 24px "Roboto"';
+                        ctx.textAlign = 'right';
+                        ctx.fillText(formatPrice(d.price1), RIGHT, y + 17);
+                    }
+                    y += LINE_H;
+                }
+
+                // Jídlo 2
+                if (d.meal2) {
+                    ctx.font = '400 24px "Roboto"';
+                    ctx.fillStyle = '#222222';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`2) ${d.meal2}`, LEFT + 5, y + 17);
+                    if (d.price2) {
+                        ctx.font = '500 24px "Roboto"';
+                        ctx.textAlign = 'right';
+                        ctx.fillText(formatPrice(d.price2), RIGHT, y + 17);
+                    }
+                    y += LINE_H;
+                }
+
+                y += BLOCK_GAP;
+            });
+
+            return c;
         }
 
         async function exportJPG() {
             showToast("⏳ Generuji obrázek...");
             try {
-                const canvas = await createExportImage();
+                const canvas = await drawMenuToCanvas();
                 const link = document.createElement('a');
                 link.download = `menu-${appState.startDate}.jpg`;
                 link.href = canvas.toDataURL('image/jpeg', 0.95);
                 link.click();
-            } catch (error) {
-                console.error("Chyba při exportu JPG:", error);
+            } catch(e) {
+                console.error(e);
                 showToast("❌ Chyba při exportu JPG");
             }
         }
@@ -603,55 +438,37 @@
         async function exportPDF() {
             showToast("⏳ Generuji PDF...");
             try {
-                const canvas = await createExportImage();
+                const canvas = await drawMenuToCanvas();
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
-                
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'px',
-                    format: [canvas.width, canvas.height]
-                });
-                
+                const pdf = new jsPDF({ orientation:'portrait', unit:'px', format:[canvas.width, canvas.height] });
                 pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
                 pdf.save(`menu-${appState.startDate}.pdf`);
-            } catch (error) {
-                console.error("Chyba při exportu PDF:", error);
+            } catch(e) {
+                console.error(e);
                 showToast("❌ Chyba při exportu PDF");
             }
         }
 
         async function shareMenu() {
-            showToast("⏳ Připravuji obrázek pro sdílení...");
+            showToast("⏳ Připravuji obrázek...");
             try {
-                const canvas = await createExportImage();
+                const canvas = await drawMenuToCanvas();
                 canvas.toBlob(async (blob) => {
-                    if (!blob) {
-                        showToast("❌ Chyba při tvorbě obrázku");
-                        return;
-                    }
-                    
-                    const file = new File([blob], `menu-${appState.startDate}.jpg`, { type: 'image/jpeg' });
-                    
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    if (!blob) { showToast("❌ Chyba"); return; }
+                    const file = new File([blob], `menu-${appState.startDate}.jpg`, { type:'image/jpeg' });
+                    if (navigator.canShare && navigator.canShare({ files:[file] })) {
                         try {
-                            await navigator.share({
-                                files: [file],
-                                title: 'Polední menu',
-                                text: 'Naše polední menu na tento týden!'
-                            });
-                        } catch (e) {
-                            if (e.name !== 'AbortError') {
-                                console.error('Share error:', e);
-                                showToast("❌ Sdílení se nezdařilo");
-                            }
+                            await navigator.share({ files:[file], title:'Polední menu', text:'Naše polední menu na tento týden!' });
+                        } catch(e) {
+                            if (e.name !== 'AbortError') showToast("❌ Sdílení se nezdařilo");
                         }
                     } else {
-                        showToast("❌ Váš prohlížeč nepodporuje přímé sdílení. Stáhněte si JPG.");
+                        showToast("❌ Prohlížeč nepodporuje sdílení. Stáhněte JPG.");
                     }
                 }, 'image/jpeg', 0.95);
-            } catch (error) {
-                console.error(error);
+            } catch(e) {
+                console.error(e);
                 showToast("❌ Chyba při sdílení");
             }
         }
