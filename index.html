@@ -524,41 +524,50 @@
         }
 
         // ============================================================
-        // EXPORT PŘES KLON
-        // html2canvas počítá pozici elementu od začátku dokumentu.
-        // Když je element zmenšený (scale) a zanořený v scrollovatelném
-        // divu, offset je špatný → header a texty jsou posunuté dolů.
+        // EXPORT - zachycení přes off-screen wrapper
         //
-        // Řešení: vytvoříme klon v position:fixed přímo na 0,0 mimo
-        // normální flow. html2canvas pak zachytí přesně 1080×1350 px
-        // bez jakéhokoliv offsetu.
+        // html2canvas ignoruje elementy s visibility:hidden nebo display:none.
+        // Klon musí být viditelný, ale mimo viewport (left: -9999px).
+        // Zachytíme document.body s ořezem na pozici klonu.
         // ============================================================
         async function createExportImage() {
             const source = document.getElementById('render-canvas');
 
-            // 1. Klon zdrojového elementu (včetně celého DOM obsahu)
-            const clone = source.cloneNode(true);
-
-            // 2. Umístíme klon přesně na 0,0 mimo flow — žádný scroll, žádný offset
-            Object.assign(clone.style, {
-                position:   'fixed',
-                top:        '0',
-                left:       '0',
-                width:      '1080px',
-                height:     '1350px',
-                transform:  'none',
-                boxShadow:  'none',
-                zIndex:     '-9999',
-                visibility: 'hidden',   // neviditelný, ale renderovaný
+            // 1. Wrapper mimo obrazovku — position:fixed, left mimo viewport
+            const wrapper = document.createElement('div');
+            Object.assign(wrapper.style, {
+                position:      'fixed',
+                top:           '0',
+                left:          '-1200px',   // mimo viewport, ale viditelné pro renderer
+                width:         '1080px',
+                height:        '1350px',
+                overflow:      'hidden',
                 pointerEvents: 'none',
+                zIndex:        '9999',
             });
 
-            document.body.appendChild(clone);
+            // 2. Klon zdrojového elementu — bez transformace, plná velikost
+            const clone = source.cloneNode(true);
+            Object.assign(clone.style, {
+                position:  'relative',
+                top:       '0',
+                left:      '0',
+                width:     '1080px',
+                height:    '1350px',
+                transform: 'none',
+                boxShadow: 'none',
+            });
 
-            // 3. Počkáme dva framy — prohlížeč musí layout vypočítat
+            wrapper.appendChild(clone);
+            document.body.appendChild(wrapper);
+
+            // 3. Počkáme na render — fonty + layout
+            await document.fonts.ready;
             await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
             try {
+                // 4. Zachytíme přímo klon — wrapper zajišťuje že je na fixed pozici
+                //    x/y říká html2canvas kde v rámci elementu začít kreslit
                 const canvas = await html2canvas(clone, {
                     scale:           1,
                     useCORS:         true,
@@ -570,13 +579,10 @@
                     y:               0,
                     scrollX:         0,
                     scrollY:         0,
-                    windowWidth:     1080,
-                    windowHeight:    1350,
                 });
                 return canvas;
             } finally {
-                // 4. Klon vždy odstraníme (i při chybě)
-                document.body.removeChild(clone);
+                document.body.removeChild(wrapper);
             }
         }
 
