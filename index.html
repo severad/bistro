@@ -33,7 +33,7 @@
             background: radial-gradient(circle at center, #ece9e2 0%, #ded9ce 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
         }
-        .canvas-disclaimer { text-align: center; color: #cc0000; font-size: 22px; font-family: 'Oswald', sans-serif; line-height: 1.2; margin-bottom: 20px; width: 860px; max-width: 100%; align-self: center; }
+        .canvas-disclaimer { text-align: center; color: #cc0000; font-size: 22px; font-family: 'Oswald', sans-serif; line-height: 1.3; margin-bottom: 20px; width: 1080px; box-sizing: border-box; }
         #canvas-days-render { width: 860px; max-width: 100%; text-align: left; }
         .day-block { margin-bottom: 15px; width: 100%; }
         .day-header { background-color: #d0bcab; display: block; width: fit-content; padding: 3px 15px; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: 1px; margin-bottom: 5px; color: #111; }
@@ -339,15 +339,15 @@
             ctx.fillStyle = '#1a1a1a';
             ctx.font = '700 125px "Dancing Script"';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillText('Polední menu', 60, 185);
+            ctx.fillText('Polední menu', 60, 172);
 
-            // --- DISCLAIMER (červený text, uprostřed) ---
+            // --- DISCLAIMER (červený text, přesně na střed šířky canvasu) ---
             ctx.fillStyle = '#cc0000';
             ctx.font = '400 22px "Oswald"';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            ctx.fillText('Změna menu vyhrazena.', W/2, 250);
-            ctx.fillText('Seznam alergenů k dispozici u obsluhy.', W/2, 278);
+            ctx.fillText('Změna menu vyhrazena.', 540, 242);
+            ctx.fillText('Seznam alergenů k dispozici u obsluhy.', 540, 270);
 
             // --- DNY ---
             const LEFT = 110;      // levý okraj obsahu (vycentrován: (1080-860)/2)
@@ -375,7 +375,7 @@
                 ctx.fillStyle = '#111111';
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(dayLabel, LEFT + HEADER_PAD_H, y + (LINE_H + HEADER_PAD_V * 2) / 2);
+                ctx.fillText(dayLabel, LEFT + HEADER_PAD_H, y + (LINE_H + HEADER_PAD_V * 2) / 2 + 3);
                 y += LINE_H + HEADER_PAD_V * 2 + 8;
 
                 // Polévka
