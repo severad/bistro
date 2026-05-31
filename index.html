@@ -555,41 +555,19 @@
             wrapper.style.height = `${1350 * scale}px`;
         }
 
-        // NOVÁ FUNKCE PRO EXPORT - "Bliknutí" na plnou velikost
+        // NOVÁ FUNKCE PRO EXPORT - "Snímek" aktuálního náhledu
         async function createExportImage() {
             const canvasElement = document.getElementById('render-canvas');
-            const canvasWrapper = document.getElementById('canvas-wrapper'); // Potřebujeme pro úpravu výšky
-
-            // 1. Uložíme aktuální stav
-            const originalTransform = canvasElement.style.transform;
-            const originalWrapperHeight = canvasWrapper.style.height;
-            const scrollTop = document.documentElement.scrollTop; // Uložit pozici skrolu
-
-            // 2. Nastavíme na plnou velikost pro "focení"
-            canvasElement.style.transform = 'none';
-            canvasWrapper.style.height = '1350px'; // Natvrdo nastavit výšku obalu
-
-            // 3. Dlouhá pauza pro překreslení prohlížeče a načtení fontů
-            await new Promise(r => setTimeout(r, 800));
-
-            try {
-                // 4. Vyfocení
-                const canvas = await html2canvas(canvasElement, {
-                    scale: 2, // 2x rozlišení pro ostrost (výsledný obrázek bude 2160x2700)
-                    useCORS: true, // Povolit načítání externích obrázků (logo)
-                    logging: false,
-                    backgroundColor: '#e4dfd6',
-                    width: 1080,
-                    height: 1350,
-                    scrollY: -window.scrollY // Kritická oprava pro správné oříznutí při skrolu
-                });
-                return canvas;
-            } finally {
-                // 5. Vrátíme vše do původního stavu
-                canvasElement.style.transform = originalTransform;
-                canvasWrapper.style.height = originalWrapperHeight;
-                document.documentElement.scrollTop = scrollTop; // Vrátit skrol
-            }
+            
+            // Přímo vyfotíme to, co je na obrazovce (ve zmenšené podobě)
+            const canvas = await html2canvas(canvasElement, {
+                scale: 1.5, // Mírné zvýšení kvality
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#e4dfd6',
+                scrollY: -window.scrollY // Kritická oprava pro správné oříznutí při skrolu
+            });
+            return canvas;
         }
 
         async function exportJPG() {
