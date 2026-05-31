@@ -4,14 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generátor Poledního Menu</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Oswald:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <!-- html2canvas and jsPDF for exports -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
@@ -23,42 +19,37 @@
             overflow-x: hidden;
         }
 
-        /* Fixed Canvas Container representing 1080x1350 (Instagram Portrait 4:5) */
         #render-canvas {
             width: 1080px;
             height: 1350px;
-            background-color: #e4dfd6; /* Light grey/beige texture base */
+            background-color: #e4dfd6;
             position: relative;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             transform-origin: top center;
-            /* Důležité pro správný export při zmenšení */
-            will-change: transform; 
         }
 
-        /* Header Area */
         .canvas-header-bg {
             background-color: #d2c1b0;
-            height: 220px; /* Zmenšeno pro více místa dole */
+            height: 220px;
             width: 100%;
             position: absolute;
             top: 0;
             left: 0;
             display: flex;
-            justify-content: space-between; /* Nadpis vlevo, logo vpravo */
+            justify-content: space-between;
             align-items: center;
             padding: 0 60px;
             box-sizing: border-box;
         }
 
-        /* Title */
         .canvas-title {
             font-family: 'Dancing Script', cursive;
             font-size: 140px;
             color: #1a1a1a;
             white-space: nowrap;
             line-height: 1;
-            padding-bottom: 15px; /* Optické vertikální vycentrování fontu */
+            padding-bottom: 15px;
         }
 
         .canvas-logo {
@@ -69,16 +60,15 @@
             z-index: 10;
         }
 
-        /* Body Area */
         .canvas-body {
             position: absolute;
             top: 220px;
             width: 100%;
             height: calc(1350px - 220px);
-            padding: 30px 0; /* Zmenšeno odsazení nahoře */
+            padding: 30px 0;
             box-sizing: border-box;
             background: radial-gradient(circle at center, #ece9e2 0%, #ded9ce 100%);
-            display: flex; /* Pro vycentrování obsahu */
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
@@ -87,40 +77,43 @@
         .canvas-disclaimer {
             text-align: center;
             color: #cc0000;
-            font-size: 22px; /* Lehce zmenšeno */
+            font-size: 22px;
             font-family: 'Oswald', sans-serif;
             line-height: 1.2;
-            margin-bottom: 20px; /* Zmenšena mezera pod textem */
-            width: 100%; /* Aby byl vycentrován */
+            margin-bottom: 20px;
+            /* FIX: musí mít pevnou šířku a vycentrování pro správné zobrazení */
+            width: 860px;
+            max-width: 100%;
+            align-self: center;
         }
 
         #canvas-days-render {
-            width: 100%;
-            max-width: 860px; /* Původní šířka pro zachování odsazení */
-            text-align: left; /* Obsah uvnitř zarovnán doleva */
+            width: 860px;
+            max-width: 100%;
+            text-align: left;
         }
 
         .day-block {
-            margin-bottom: 15px; /* Zmenšena mezera mezi dny */
+            margin-bottom: 15px;
             width: 100%;
             text-align: left;
         }
 
         .day-header {
             background-color: #d0bcab;
-            display: block; /* Místo inline-block */
-            width: fit-content; /* Aby pozadí bylo jen pod textem */
+            display: block;
+            width: fit-content;
             padding: 3px 15px;
             font-family: 'Oswald', sans-serif;
             font-weight: 700;
-            font-size: 26px; /* Lehce zmenšeno */
+            font-size: 26px;
             letter-spacing: 1px;
             margin-bottom: 5px;
             color: #111;
         }
 
         .food-item {
-            font-size: 24px; /* Zmenšeno pro lepší narvání obsahu */
+            font-size: 24px;
             color: #222;
             line-height: 1.3;
             display: flex;
@@ -145,7 +138,6 @@
             min-width: 100px;
         }
 
-        /* Number input fixes */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
@@ -155,25 +147,15 @@
             -moz-appearance: textfield;
         }
 
-        /* App UI Styling */
         .tab-btn.active {
             border-bottom: 2px solid #3b82f6;
             color: #3b82f6;
         }
 
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         #toast {
             visibility: hidden;
@@ -195,13 +177,10 @@
             visibility: visible;
             opacity: 1;
         }
-        
-        /* Kontejner pro export byl odstraněn */
     </style>
 </head>
 <body class="flex flex-col h-screen text-gray-800">
 
-    <!-- Header Navigation -->
     <header class="bg-white shadow-sm z-10 relative">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
@@ -223,7 +202,6 @@
         </div>
     </header>
 
-    <!-- Main Content Area -->
     <main class="flex-1 overflow-hidden relative">
         
         <!-- EDITOR TAB -->
@@ -241,9 +219,7 @@
                     </div>
                 </div>
 
-                <div id="days-container" class="space-y-4">
-                    <!-- Generováno přes JS -->
-                </div>
+                <div id="days-container" class="space-y-4"></div>
                 
                 <div class="flex justify-between items-center pt-4">
                     <button onclick="clearData()" class="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
@@ -261,7 +237,6 @@
         <div id="tab-preview" class="absolute inset-0 overflow-y-auto bg-gray-800 p-4 opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col items-center">
             
             <div class="bg-white p-3 rounded-2xl shadow-xl flex flex-wrap justify-center gap-2 sm:gap-4 mb-6 sticky top-0 z-20 w-full max-w-2xl">
-                <!-- Změněna ikona z instagram na download -->
                 <button onclick="exportJPG()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white px-4 py-2.5 rounded-xl font-medium shadow-sm transition-all transform active:scale-95">
                     <i data-lucide="download" class="w-5 h-5"></i>
                     <span>Stáhnout JPG</span>
@@ -288,9 +263,7 @@
                             Změna menu vyhrazena.<br>Seznam alergenů k dispozici u obsluhy.
                         </div>
                         
-                        <div id="canvas-days-render">
-                            <!-- Vygenerováno přes JS -->
-                        </div>
+                        <div id="canvas-days-render"></div>
                     </div>
                 </div>
             </div>
@@ -299,8 +272,6 @@
     </main>
 
     <div id="toast">✅ Uloženo do prohlížeče</div>
-    
-    <!-- Kontejner pro export byl odstraněn -->
 
     <script>
         lucide.createIcons();
@@ -310,12 +281,12 @@
 
         let appState = {
             startDate: getNextMonday(),
-            days: Array(5).fill(null).map((_, i) => ({
+            days: Array(5).fill(null).map(() => ({
                 soup: '',
                 meal1: '',
-                price1: '159', // Pouze číslo
+                price1: '159',
                 meal2: '',
-                price2: '159'  // Pouze číslo
+                price2: '159'
             }))
         };
 
@@ -420,10 +391,8 @@
             updatePreview();
         }
 
-        // Pomocná funkce pro vygenerování ceny se znaky ,-
         function formatPrice(priceVal) {
             if (!priceVal) return '';
-            // Odstraníme jakékoliv předchozí čárky, mínusy nebo mezery pro čisté číslo
             let cleanVal = String(priceVal).replace(/[,\-\s]/g, '');
             if (cleanVal) return `${cleanVal},-`;
             return '';
@@ -482,7 +451,6 @@
             if (saved) {
                 try {
                     appState = JSON.parse(saved);
-                    // Zpětná kompatibilita - pokud uživatel měl dříve uloženo např. "159,-", vyčistíme to zpět na číslo
                     appState.days.forEach(day => {
                         if (day.price1) day.price1 = String(day.price1).replace(/[,\-\s]/g, '');
                         if (day.price2) day.price2 = String(day.price2).replace(/[,\-\s]/g, '');
@@ -555,32 +523,58 @@
             wrapper.style.height = `${1350 * scale}px`;
         }
 
-        // NOVÁ FUNKCE PRO EXPORT - "Snímek" aktuálního náhledu
+        // ============================================================
+        // OPRAVENÁ FUNKCE EXPORTU
+        // Problém: html2canvas zachytí element po CSS scale() transformaci.
+        // Řešení: před exportem dočasně odstraníme transformaci, zachytíme
+        // element v plné velikosti 1080x1350, pak transformaci obnovíme.
+        // ============================================================
         async function createExportImage() {
             const canvasElement = document.getElementById('render-canvas');
-            
-            // Přímo vyfotíme to, co je na obrazovce (ve zmenšené podobě)
-            const canvas = await html2canvas(canvasElement, {
-                scale: 1.5, // Mírné zvýšení kvality
-                useCORS: true,
-                logging: false,
-                backgroundColor: '#e4dfd6',
-                scrollY: -window.scrollY // Kritická oprava pro správné oříznutí při skrolu
-            });
-            return canvas;
+            const wrapper = document.getElementById('canvas-wrapper');
+
+            // 1. Uložíme aktuální transformaci a výšku wrapperu
+            const originalTransform = canvasElement.style.transform;
+            const originalWrapperHeight = wrapper.style.height;
+            const originalBoxShadow = canvasElement.style.boxShadow;
+
+            // 2. Odstraníme transformaci — element bude v plné velikosti 1080×1350
+            canvasElement.style.transform = 'none';
+            canvasElement.style.boxShadow = 'none';
+            wrapper.style.height = '1350px';
+
+            // 3. Počkáme jeden frame aby prohlížeč přerendoval layout
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+            try {
+                // 4. Zachytíme element v plné velikosti — žádné scale(), žádné posunutí
+                const canvas = await html2canvas(canvasElement, {
+                    scale: 1,           // 1:1 — zachytíme přesně 1080×1350 px
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#e4dfd6',
+                    width: 1080,
+                    height: 1350,
+                    windowWidth: 1080,
+                    scrollX: 0,
+                    scrollY: 0
+                });
+                return canvas;
+            } finally {
+                // 5. Vždy obnovíme původní transformaci (i při chybě)
+                canvasElement.style.transform = originalTransform;
+                canvasElement.style.boxShadow = originalBoxShadow;
+                wrapper.style.height = originalWrapperHeight;
+            }
         }
 
         async function exportJPG() {
             showToast("⏳ Generuji obrázek...");
             try {
-                // Počkáme na vytvoření canvasu
                 const canvas = await createExportImage();
-                
-                // Vytvoříme odkaz ke stažení
                 const link = document.createElement('a');
                 link.download = `menu-${appState.startDate}.jpg`;
-                // Převedeme canvas na JPG data URL s kvalitou 0.9
-                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
                 link.click();
             } catch (error) {
                 console.error("Chyba při exportu JPG:", error);
@@ -591,20 +585,16 @@
         async function exportPDF() {
             showToast("⏳ Generuji PDF...");
             try {
-                // Počkáme na vytvoření canvasu
                 const canvas = await createExportImage();
-                // Převedeme canvas na JPG data URL s kvalitou 0.9
-                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
                 
                 const { jsPDF } = window.jspdf;
-                // POUŽIJEME VLASTNÍ VELIKOST STRÁNKY PODLE CANVASU (aby se nic neuseklo)
                 const pdf = new jsPDF({
                     orientation: 'portrait',
                     unit: 'px',
-                    format: [canvas.width, canvas.height] // Nastaví velikost stránky přesně podle rozměrů obrázku
+                    format: [canvas.width, canvas.height]
                 });
                 
-                // Vložíme obrázek do PDF
                 pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
                 pdf.save(`menu-${appState.startDate}.pdf`);
             } catch (error) {
@@ -641,7 +631,7 @@
                     } else {
                         showToast("❌ Váš prohlížeč nepodporuje přímé sdílení. Stáhněte si JPG.");
                     }
-                }, 'image/jpeg', 0.9);
+                }, 'image/jpeg', 0.95);
             } catch (error) {
                 console.error(error);
                 showToast("❌ Chyba při sdílení");
@@ -649,7 +639,6 @@
         }
 
         init();
-
     </script>
 </body>
 </html>
