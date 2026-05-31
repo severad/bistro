@@ -43,7 +43,7 @@
             top: 0;
             left: 0;
             display: flex;
-            justify-content: center; /* Vycentrovat obsah (nadpis) */
+            justify-content: space-between; /* Nadpis vlevo, logo vpravo */
             align-items: center;
             padding: 0 60px;
             box-sizing: border-box;
@@ -57,7 +57,7 @@
             white-space: nowrap;
             line-height: 1;
             padding-bottom: 15px; /* Optické vertikální vycentrování fontu */
-            text-align: center; /* Vycentrovat text */
+            /* text-align: center; - ODSTRANĚNO */
         }
 
         .canvas-logo {
@@ -66,10 +66,10 @@
             object-fit: contain;
             border-radius: 50%;
             z-index: 10;
-            position: absolute; /* Logo absolutně vpravo */
-            right: 60px; /* Stejné odsazení jako padding */
-            top: 50%;
-            transform: translateY(-50%);
+            /* position: absolute; - ODSTRANĚNO, nyní je součástí flex layoutu */
+            /* right: 60px; */
+            /* top: 50%; */
+            /* transform: translateY(-50%); */
         }
 
         /* Body Area */
@@ -205,6 +205,19 @@
             visibility: visible;
             opacity: 1;
         }
+        
+        /* Hidden container for export rendering */
+        #export-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen text-gray-800">
@@ -310,6 +323,9 @@
     </main>
 
     <div id="toast">✅ Uloženo do prohlížeče</div>
+    
+    <!-- Hidden container for off-screen rendering -->
+    <div id="export-container"></div>
 
     <script>
         lucide.createIcons();
@@ -564,23 +580,31 @@
             wrapper.style.height = `${1350 * scale}px`;
         }
 
+        // NOVÁ FUNKCE PRO EXPORT - "Screenshot" neviditelného klonu
         async function createExportImage() {
-            const canvasElement = document.getElementById('render-canvas');
-            const originalTransform = canvasElement.style.transform;
-            canvasElement.style.transform = 'scale(1)';
-            
+            const originalCanvas = document.getElementById('render-canvas');
+            const exportContainer = document.getElementById('export-container');
+
+            // Vytvoříme klon a umístíme ho mimo obrazovku
+            const clonedCanvas = originalCanvas.cloneNode(true);
+            clonedCanvas.id = 'render-canvas-clone';
+            clonedCanvas.style.transform = ''; // Žádné škálování
+            exportContainer.appendChild(clonedCanvas);
+
+            // Počkáme na vykreslení (pro jistotu)
             await new Promise(r => setTimeout(r, 100));
 
             try {
-                const canvas = await html2canvas(canvasElement, {
-                    scale: 2,
+                const canvas = await html2canvas(clonedCanvas, {
+                    scale: 2, // 2x rozlišení pro ostrost
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#e4dfd6'
                 });
                 return canvas;
             } finally {
-                canvasElement.style.transform = originalTransform;
+                // Uklidíme po sobě
+                exportContainer.removeChild(clonedCanvas);
             }
         }
 
