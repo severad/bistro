@@ -43,7 +43,7 @@
             top: 0;
             left: 0;
             display: flex;
-            justify-content: space-between; /* Nadpis vlevo, logo vpravo */
+            justify-content: center; /* Vycentrovat obsah (nadpis) */
             align-items: center;
             padding: 0 60px;
             box-sizing: border-box;
@@ -57,6 +57,7 @@
             white-space: nowrap;
             line-height: 1;
             padding-bottom: 15px; /* Optické vertikální vycentrování fontu */
+            text-align: center; /* Vycentrovat text */
         }
 
         .canvas-logo {
@@ -65,6 +66,10 @@
             object-fit: contain;
             border-radius: 50%;
             z-index: 10;
+            position: absolute; /* Logo absolutně vpravo */
+            right: 60px; /* Stejné odsazení jako padding */
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         /* Body Area */
@@ -76,14 +81,18 @@
             padding: 30px 0; /* Zmenšeno odsazení nahoře */
             box-sizing: border-box;
             background: radial-gradient(circle at center, #ece9e2 0%, #ded9ce 100%);
+            display: flex; /* Pro vycentrování obsahu */
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
         }
 
-        /* Wrapper that centers the text content */
-        .canvas-content-wrapper {
+        /* Wrapper that centers the text content - ODSTRANĚNO */
+        /* .canvas-content-wrapper {
             max-width: 860px;
             margin: 0 auto;
             width: 100%;
-        }
+        } */
 
         .canvas-disclaimer {
             text-align: center;
@@ -92,15 +101,25 @@
             font-family: 'Oswald', sans-serif;
             line-height: 1.2;
             margin-bottom: 20px; /* Zmenšena mezera pod textem */
+            width: 100%; /* Aby byl vycentrován */
+        }
+
+        #canvas-days-render {
+            width: 100%;
+            max-width: 860px; /* Původní šířka pro zachování odsazení */
+            text-align: left; /* Obsah uvnitř zarovnán doleva */
         }
 
         .day-block {
             margin-bottom: 15px; /* Zmenšena mezera mezi dny */
+            width: 100%;
+            text-align: left;
         }
 
         .day-header {
             background-color: #d0bcab;
-            display: inline-block;
+            display: block; /* Místo inline-block */
+            width: fit-content; /* Aby pozadí bylo jen pod textem */
             padding: 3px 15px;
             font-family: 'Oswald', sans-serif;
             font-weight: 700;
@@ -273,8 +292,8 @@
                     </div>
                     
                     <div class="canvas-body">
-                        <!-- Wrapper pro vycentrování obsahu menu -->
-                        <div class="canvas-content-wrapper">
+                        <!-- Wrapper pro vycentrování obsahu menu - ODSTRANĚNO -->
+                        <!-- <div class="canvas-content-wrapper"> -->
                             <div class="canvas-disclaimer">
                                 Změna menu vyhrazena.<br>Seznam alergenů k dispozici u obsluhy.
                             </div>
@@ -282,7 +301,7 @@
                             <div id="canvas-days-render">
                                 <!-- Vygenerováno přes JS -->
                             </div>
-                        </div>
+                        <!-- </div> -->
                     </div>
                 </div>
             </div>
@@ -586,12 +605,14 @@
                 const imgData = canvas.toDataURL('image/jpeg', 0.9);
                 
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
+                // POUŽIJEME VLASTNÍ VELIKOST STRÁNKY PODLE CANVASU
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height] // Nastaví velikost stránky přesně podle canvasu
+                });
                 
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                
-                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
                 pdf.save(`menu-${appState.startDate}.pdf`);
             } catch (error) {
                 console.error(error);
