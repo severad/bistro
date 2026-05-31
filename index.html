@@ -20,7 +20,9 @@
             transform-origin: top center;
         }
         .canvas-header-bg {
-            background-color: #d2c1b0; height: 220px; width: 100%;
+            background-color: #d2c1b0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0.3'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.07'/%3E%3C/svg%3E");
+            height: 220px; width: 100%;
             position: absolute; top: 0; left: 0;
             display: flex; justify-content: space-between; align-items: center;
             padding: 0 60px; box-sizing: border-box;
@@ -30,17 +32,19 @@
         .canvas-body {
             position: absolute; top: 220px; width: 100%; height: calc(1350px - 220px);
             padding: 30px 0; box-sizing: border-box;
-            background: radial-gradient(circle at center, #ece9e2 0%, #ded9ce 100%);
+            background:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0.3'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E"),
+                radial-gradient(circle at center, #eee9e0 0%, #e5dfd4 50%, #d8d2c5 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
         }
-        .canvas-disclaimer { text-align: center; color: #cc0000; font-size: 22px; font-family: 'Oswald', sans-serif; line-height: 1.3; margin-bottom: 20px; width: 1080px; box-sizing: border-box; }
-        #canvas-days-render { width: 860px; max-width: 100%; text-align: left; }
-        .day-block { margin-bottom: 15px; width: 100%; }
-        .day-header { background-color: #d0bcab; display: block; width: fit-content; padding: 3px 15px; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: 1px; margin-bottom: 5px; color: #111; }
-        .food-item { font-size: 24px; color: #222; line-height: 1.3; display: flex; justify-content: space-between; }
-        .food-soup { font-size: 24px; color: #222; margin-bottom: 3px; padding-left: 5px; }
+        .canvas-disclaimer { text-align: center; color: #cc0000; font-size: 24px; font-family: 'Oswald', sans-serif; line-height: 1.3; margin-bottom: 20px; width: 1080px; box-sizing: border-box; }
+        #canvas-days-render { width: 880px; max-width: 100%; text-align: left; }
+        .day-block { margin-bottom: 24px; width: 100%; }
+        .day-header { background-color: #d0bcab; display: block; width: fit-content; padding: 5px 16px; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: 1px; margin-bottom: 10px; color: #111; }
+        .food-item { font-size: 28px; color: #222; line-height: 1.5; display: flex; justify-content: space-between; }
+        .food-soup { font-size: 28px; color: #333; margin-bottom: 2px; padding-left: 5px; }
         .food-meal { padding-left: 5px; flex: 1; }
-        .food-price { font-weight: 500; text-align: right; min-width: 100px; }
+        .food-price { font-weight: 500; text-align: right; min-width: 110px; }
 
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
@@ -303,27 +307,81 @@
         // Žádné DOM zachytávání — vše nakreslíme přímo kódem.
         // ============================================================
 
+        // Generuje texturu papíru přímo na canvasu — žádné externí soubory
+        function drawPaperTexture(ctx, x, y, w, h, seed) {
+            // Náhodný generátor se seedem pro konzistentní výsledky
+            let s = seed || 42;
+            function rnd() { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; }
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'multiply'; // tmavší vlákna zesilují barvu pod nimi
+
+            // 1. Jemná zrnitost — tisíce náhodných semi-transparentních teček
+            for (let i = 0; i < 18000; i++) {
+                const px = x + rnd() * w;
+                const py = y + rnd() * h;
+                const alpha = rnd() * 0.055;
+                const gray = Math.floor(rnd() * 80 + 120); // 120–200, béžové tóny
+                ctx.fillStyle = `rgba(${gray},${Math.floor(gray*0.85)},${Math.floor(gray*0.72)},${alpha})`;
+                ctx.fillRect(px, py, 1.2, 1.2);
+            }
+
+            // 2. Papírová vlákna — krátké vodorovné tahy
+            for (let i = 0; i < 2200; i++) {
+                const px = x + rnd() * w;
+                const py = y + rnd() * h;
+                const len = rnd() * 38 + 6;
+                const alpha = rnd() * 0.04;
+                const tone = Math.floor(rnd() * 40 + 100);
+                ctx.strokeStyle = `rgba(${tone},${Math.floor(tone*0.82)},${Math.floor(tone*0.68)},${alpha})`;
+                ctx.lineWidth = rnd() * 0.8 + 0.3;
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(px + len, py + (rnd() - 0.5) * 1.5);
+                ctx.stroke();
+            }
+
+            // 3. Lehké světlejší flíčky — variace v tónu papíru
+            for (let i = 0; i < 320; i++) {
+                const px = x + rnd() * w;
+                const py = y + rnd() * h;
+                const r = rnd() * 22 + 4;
+                const alpha = rnd() * 0.025;
+                ctx.fillStyle = `rgba(255,245,230,${alpha})`;
+                ctx.beginPath();
+                ctx.ellipse(px, py, r, r * (0.4 + rnd() * 0.6), rnd() * Math.PI, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.restore();
+        }
+
         async function drawMenuToCanvas() {
             const W = 1080, H = 1350;
             const c = document.createElement('canvas');
             c.width = W; c.height = H;
             const ctx = c.getContext('2d');
 
-            // Počkáme na fonty
             await document.fonts.ready;
 
             // --- HEADER (béžová plocha) ---
             ctx.fillStyle = '#d2c1b0';
             ctx.fillRect(0, 0, W, 220);
+            // Textura na headeru
+            drawPaperTexture(ctx, 0, 0, W, 220, 11);
 
-            // --- BODY (radial gradient) ---
-            const grad = ctx.createRadialGradient(W/2, 220 + (H-220)/2, 0, W/2, 220 + (H-220)/2, W*0.7);
-            grad.addColorStop(0, '#ece9e2');
-            grad.addColorStop(1, '#ded9ce');
+            // --- BODY (radial gradient jako základ) ---
+            const grad = ctx.createRadialGradient(W/2, 220 + (H-220)/2, 0, W/2, 220 + (H-220)/2, W*0.75);
+            grad.addColorStop(0,   '#eee9e0');
+            grad.addColorStop(0.5, '#e5dfd4');
+            grad.addColorStop(1,   '#d8d2c5');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 220, W, H - 220);
+            // Papírová textura přes celé tělo
+            drawPaperTexture(ctx, 0, 220, W, H - 220, 99);
 
-            // --- LOGO (pokud existuje) ---
+            // --- LOGO ---
             const logoImg = document.getElementById('logo-img');
             if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
                 ctx.save();
@@ -341,25 +399,27 @@
             ctx.textBaseline = 'alphabetic';
             ctx.fillText('Polední menu', 60, 172);
 
-            // --- DISCLAIMER (červený text, přesně na střed šířky canvasu) ---
+            // --- DISCLAIMER ---
             ctx.fillStyle = '#cc0000';
-            ctx.font = '400 22px "Oswald"';
+            ctx.font = '400 24px "Oswald"';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             ctx.fillText('Změna menu vyhrazena.', 540, 242);
-            ctx.fillText('Seznam alergenů k dispozici u obsluhy.', 540, 270);
+            ctx.fillText('Seznam alergenů k dispozici u obsluhy.', 540, 273);
 
             // --- DNY ---
-            const LEFT = 110;      // levý okraj obsahu (vycentrován: (1080-860)/2)
-            const RIGHT = W - 110; // pravý okraj
-            const CONTENT_W = RIGHT - LEFT;
+            const LEFT = 100;
+            const RIGHT = W - 100;
 
-            let y = 330; // startovní Y po disclaimeru
+            let y = 338;
 
-            const LINE_H = 34;     // výška řádku
-            const BLOCK_GAP = 18;  // mezera mezi dny
-            const HEADER_PAD_V = 6;
-            const HEADER_PAD_H = 15;
+            // Větší fonty + větší rozestupy = lepší využití plochy
+            const FONT_SIZE   = 28;   // bylo 24
+            const LINE_H      = 42;   // bylo 34
+            const BLOCK_GAP   = 24;   // bylo 18
+            const HEADER_SIZE = 30;   // bylo 26
+            const HEADER_H    = 44;   // výška záhlaví
+            const HEADER_PAD_H = 16;
 
             appState.days.forEach((d, i) => {
                 if (!d.soup && !d.meal1 && !d.meal2) return;
@@ -367,50 +427,53 @@
                 const dateStr = calculateDateForDay(appState.startDate, i);
                 const dayLabel = `${DAYS[i].toUpperCase()} ${dateStr}`;
 
-                // Záhlaví dne — obdélník s textem
-                ctx.font = '700 26px "Oswald"';
+                // Záhlaví dne
+                ctx.font = `700 ${HEADER_SIZE}px "Oswald"`;
                 const headerW = ctx.measureText(dayLabel).width + HEADER_PAD_H * 2;
                 ctx.fillStyle = '#d0bcab';
-                ctx.fillRect(LEFT, y, headerW, LINE_H + HEADER_PAD_V * 2);
+                ctx.fillRect(LEFT, y, headerW, HEADER_H);
                 ctx.fillStyle = '#111111';
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(dayLabel, LEFT + HEADER_PAD_H, y + (LINE_H + HEADER_PAD_V * 2) / 2 + 3);
-                y += LINE_H + HEADER_PAD_V * 2 + 8;
+                ctx.fillText(dayLabel, LEFT + HEADER_PAD_H, y + HEADER_H / 2 + 2);
+                y += HEADER_H + 10;
 
                 // Polévka
                 if (d.soup) {
-                    ctx.font = '400 24px "Roboto"';
-                    ctx.fillStyle = '#222222';
+                    ctx.font = `400 ${FONT_SIZE}px "Roboto"`;
+                    ctx.fillStyle = '#333333';
                     ctx.textAlign = 'left';
-                    ctx.fillText(d.soup, LEFT + 5, y + 17);
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(d.soup, LEFT + 5, y);
                     y += LINE_H;
                 }
 
                 // Jídlo 1
                 if (d.meal1) {
-                    ctx.font = '400 24px "Roboto"';
+                    ctx.font = `400 ${FONT_SIZE}px "Roboto"`;
                     ctx.fillStyle = '#222222';
                     ctx.textAlign = 'left';
-                    ctx.fillText(`1) ${d.meal1}`, LEFT + 5, y + 17);
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(`1) ${d.meal1}`, LEFT + 5, y);
                     if (d.price1) {
-                        ctx.font = '500 24px "Roboto"';
+                        ctx.font = `500 ${FONT_SIZE}px "Roboto"`;
                         ctx.textAlign = 'right';
-                        ctx.fillText(formatPrice(d.price1), RIGHT, y + 17);
+                        ctx.fillText(formatPrice(d.price1), RIGHT, y);
                     }
                     y += LINE_H;
                 }
 
                 // Jídlo 2
                 if (d.meal2) {
-                    ctx.font = '400 24px "Roboto"';
+                    ctx.font = `400 ${FONT_SIZE}px "Roboto"`;
                     ctx.fillStyle = '#222222';
                     ctx.textAlign = 'left';
-                    ctx.fillText(`2) ${d.meal2}`, LEFT + 5, y + 17);
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(`2) ${d.meal2}`, LEFT + 5, y);
                     if (d.price2) {
-                        ctx.font = '500 24px "Roboto"';
+                        ctx.font = `500 ${FONT_SIZE}px "Roboto"`;
                         ctx.textAlign = 'right';
-                        ctx.fillText(formatPrice(d.price2), RIGHT, y + 17);
+                        ctx.fillText(formatPrice(d.price2), RIGHT, y);
                     }
                     y += LINE_H;
                 }
